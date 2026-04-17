@@ -12,13 +12,20 @@ export default function Weekly() {
 
   const fetchWeeklyData = async () => {
     const res = await api.get('/weekly');
-    setWeeklyPlan(res.data);
+    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const fullPlan = days.map(day => {
+      return res.data.find((p: any) => p.day === day) || { day, morning: '', afternoon: '', night: '' };
+    });
+    setWeeklyPlan(fullPlan);
   };
 
-  const handleSave = () => {
-    // In a real scenario we might PUT the entire array or individual items.
-    // For now we simulate save
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      await api.put('/weekly', weeklyPlan);
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Erro ao salvar plano:", err);
+    }
   };
 
   const updateCell = (index: number, period: string, value: string) => {

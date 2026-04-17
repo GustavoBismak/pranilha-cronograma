@@ -61,7 +61,18 @@ api.interceptors.response.use(
         }
       }
       else if (path.includes('/uber')) data.uber.history.push(JSON.parse(req.data));
-      else if (path.includes('/goals')) data.goals.push(JSON.parse(req.data));
+      else if (path.includes('/goals')) {
+        const body = JSON.parse(req.data);
+        if (req.method === 'put') {
+           data.goals = data.goals.map((g: any) => g.id === body.id ? { ...g, ...body } : g);
+        } else {
+           data.goals.push(body);
+        }
+      }
+      else if (path.includes('/weekly')) {
+        const body = JSON.parse(req.data);
+        data.weekly = body;
+      }
       
       setLocal('bismak_data', data);
       mockResponseData = { success: true };

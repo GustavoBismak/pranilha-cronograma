@@ -126,6 +126,16 @@ app.get('/api/weekly', (req, res) => {
   res.json(result);
 });
 
+app.put('/api/weekly', (req, res) => {
+  const plans = req.body; // Expecting array of objects
+  const stmt = db.prepare('UPDATE weekly SET morning=?, afternoon=?, night=? WHERE day=?');
+  const transaction = db.transaction((items) => {
+    for (const item of items) stmt.run(item.morning, item.afternoon, item.night, item.day);
+  });
+  transaction(plans);
+  res.json({ success: true });
+});
+
 // WEBHOOK n8n
 app.post('/api/webhook/n8n', (req, res) => {
   console.log('Recebido payload do n8n:', req.body);
