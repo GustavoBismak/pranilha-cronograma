@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, Fuel, TrendingUp } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
