@@ -53,17 +53,17 @@ export default function Routine() {
       fetch('https://provedor.app.n8n.cloud/webhook-test/bismak-reminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        mode: 'no-cors',
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
         })
-      }).then(() => {
+      }).then((res) => {
+        if (!res.ok) throw new Error("Status: " + res.status);
         console.log("Enviado para n8n com sucesso!");
         alert("Enviado com sucesso! Verifique o n8n.");
       }).catch(err => {
-        console.error("Erro crítico no fetch:", err);
-        alert("Erro ao enviar: " + err.message);
+        console.error("Erro no envio:", err);
+        alert("Erro no envio: " + err.message);
       });
     }
 
