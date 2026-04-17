@@ -1,0 +1,118 @@
+import { useEffect, useState } from 'react';
+import { Plus, Check, Trash2 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import api from '../services/api';
+
+export default function Routine() {
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [newTask, setNewTask] = useState({ title: '', time: '', type: 'estudo' });
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    const res = await api.get('/routine');
+    setTasks(res.data.sort((a: any, b: any) => a.time.localeCompare(b.time)));
+  };
+
+  const addTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTask.title || !newTask.time) return;
+    
+    await api.post('/routine', { id: uuidv4(), ...newTask, completed: false });
+    setNewTask({ title: '', time: '', type: 'estudo' });
+    fetchTasks();
+  };
+
+  const toggleTask = async (task: any) => {
+    await api.put('/routine', { ...task, completed: !task.completed });
+    fetchTasks();
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Cronograma Diário</h2>
+      </div>
+
+      <div className="glass-panel p-6">
+        <form onSubmit={addTask} className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1 w-full relative group">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Nova Tarefa</label>
+            <input 
+              type="text" 
+              value={newTask.title}
+              onChange={e => setNewTask({...newTask, title: e.target.value})}
+              className="w-full bg-black/20 border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+              placeholder="Ex: Estudar React"
+            />
+          </div>
+          <div className="w-full md:w-32">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Horário</label>
+            <input 
+              type="time" 
+              value={newTask.time}
+              onChange={e => setNewTask({...newTask, time: e.target.value})}
+              className="w-full bg-black/20 border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <div className="w-full md:w-40">
+            <label className="block text-sm font-medium text-gray-400 mb-1">Categoria</label>
+            <select 
+              value={newTask.type}
+              onChange={e => setNewTask({...newTask, type: e.target.value})}
+              className="w-full bg-[#1a1d24] border border-white/10 rounded-xl py-2 px-4 text-white focus:outline-none focus:border-blue-500 transition-colors"
+            >
+              <option value="estudo">Estudo/Proj</option>
+              <option value="uber">Uber</option>
+              <option value="familia">Família</option>
+              <option value="trabalho">Trabalho</option>
+            </select>
+          </div>
+          <button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition duration-200 flex items-center justify-center gap-2">
+            <Plus size={20} /> Adicionar
+          </button>
+        </form>
+      </div>
+
+      <div className="grid gap-3">
+        {tasks.map(task => (
+          <div key={task.id} className={`glass-panel p-4 flex items-center justify-between transition-all duration-300 ${task.completed ? 'opacity-60 grayscale' : 'hover:border-white/20'}`}>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => toggleTask(task)}
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition ${task.completed ? 'bg-emerald-500 border-emerald-500' : 'border-gray-500 hover:border-blue-400'}`}
+              >
+                {task.completed && <Check size={14} className="text-white" />}
+              </button>
+              <div>
+                <h3 className={`font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-100'}`}>{task.title}</h3>
+                <div className="flex gap-2 text-sm mt-1">
+                  <span className="text-gray-400 font-mono bg-black/30 px-2 py-0.5 rounded-md">{task.time}</span>
+                  <span className={`px-2 py-0.5 rounded-md text-xs font-medium uppercase tracking-wider
+                    ${task.type === 'uber' ? 'bg-indigo-500/10 text-indigo-400' : ''}
+                    ${task.type === 'estudo' ? 'bg-blue-500/10 text-blue-400' : ''}
+                    ${task.type === 'familia' ? 'bg-rose-500/10 text-rose-400' : ''}
+                    ${task.type === 'trabalho' ? 'bg-amber-500/10 text-amber-400' : ''}
+                  `}>
+                    {task.type}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <button className="p-2 text-gray-500 hover:text-red-400 transition hover:bg-red-400/10 rounded-lg">
+              <Trash2 size={18} />
+            </button>
+          </div>
+        ))}
+        {tasks.length === 0 && (
+          <div className="text-center py-10 text-gray-400 border border-dashed border-white/10 rounded-2xl">
+            Nenhuma tarefa para hoje. Adicione uma acima.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
