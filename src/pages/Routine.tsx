@@ -50,7 +50,7 @@ export default function Routine() {
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      fetch('https://ripe-words-battle.loca.lt/webhook-test/bismak-reminder', {
+      fetch('https://wicked-bags-join.loca.lt/webhook-test/bismak-reminder', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
