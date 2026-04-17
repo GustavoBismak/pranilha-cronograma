@@ -33,8 +33,8 @@ Um aplicativo completo focado em organização pessoal, rotina diária, controle
 
 3.  **Acesse no navegador**:
     - URL: `http://localhost:5173`
-    - **Login**: `admin@bismak.com`
-    - **Senha**: `admin123`
+    - **Login**: `bismakgustavo3@gmail.com`
+    - **Senha**: `Bismak2006@`
 
 ## 🔌 Integração n8n
 

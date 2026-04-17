@@ -46,7 +46,7 @@ db.exec(`
 // Authentication Endpoint (Mock for SaaS)
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
-  if (email === 'admin@bismak.com' && password === 'admin123') {
+  if (email === 'bismakgustavo3@gmail.com' && password === 'Bismak2006@') {
     res.json({ token: 'mock-jwt-token' });
   } else {
     res.status(401).json({ error: 'Invalid credentials' });

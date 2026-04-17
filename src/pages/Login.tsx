@@ -10,11 +10,11 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@bismak.com' && password === 'admin123') {
+    if (email === 'bismakgustavo3@gmail.com' && password === 'Bismak2006@') {
       localStorage.setItem('auth_token', 'true');
       navigate('/dashboard');
     } else {
-      setError('Credenciais inválidas. Tente admin@bismak.com / admin123');
+      setError('Credenciais inválidas. Verifique seu e-mail e senha.');
     }
   };
 
