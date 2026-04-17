@@ -2,24 +2,26 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Activity, Car, CheckCircle, Clock } from 'lucide-react';
-import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
   const [data, setData] = useState<any>({ routine: [], uber: { history: [] }, goals: [] });
 
   useEffect(() => {
-    Promise.all([
-      api.get('/routine'),
-      api.get('/uber'),
-      api.get('/goals')
-    ]).then(([resRoutine, resUber, resGoals]) => {
-      setData({
-        routine: resRoutine.data,
-        uber: resUber.data,
-        goals: resGoals.data
-      });
-    });
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    const { data: routine } = await supabase.from('routine').select('*');
+    const { data: uberHistory } = await supabase.from('uber').select('*').order('date', { ascending: false });
+    const { data: goals } = await supabase.from('goals').select('*');
+
+    setData({
+      routine: routine || [],
+      uber: { history: uberHistory || [] },
+      goals: goals || []
+    });
+  };
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const todayEarnings = data.uber.history.find((h: any) => h.date === todayStr)?.profit || 0;

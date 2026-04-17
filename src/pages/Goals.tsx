@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Target, Trophy, Plus } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
 export default function Goals() {
   const [goals, setGoals] = useState<any[]>([]);
@@ -12,22 +11,22 @@ export default function Goals() {
   }, []);
 
   const fetchGoals = async () => {
-    const res = await api.get('/goals');
-    setGoals(res.data);
+    const { data } = await supabase.from('goals').select('*');
+    if (data) setGoals(data);
   };
 
   const addGoal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.deadline) return;
     
-    await api.post('/goals', { id: uuidv4(), ...form, progress: parseInt(form.progress as any) || 0 });
+    await supabase.from('goals').insert([{ ...form, progress: parseInt(form.progress as any) || 0 }]);
     setForm({ title: '', progress: 0, deadline: '' });
     fetchGoals();
   };
 
   const updateProgress = async (goal: any, amount: number) => {
     const newProgress = Math.min(100, Math.max(0, goal.progress + amount));
-    await api.put('/goals', { id: goal.id, progress: newProgress });
+    await supabase.from('goals').update({ progress: newProgress }).eq('id', goal.id);
     fetchGoals();
   };
 

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, Check, Trash2 } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import api from '../services/api';
+import { Plus, Check, Trash2, Bell } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function Routine() {
   const [tasks, setTasks] = useState<any[]>([]);
-  const [newTask, setNewTask] = useState({ title: '', time: '', type: 'estudo' });
-
+  const [newTask, setNewTask] = useState({ title: '', time: '', type: 'estudo', send_reminder: false });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -15,16 +13,15 @@ export default function Routine() {
 
   const fetchTasks = async () => {
     setIsLoading(true);
-    const res = await api.get('/routine');
-    setTasks(res.data.sort((a: any, b: any) => a.time.localeCompare(b.time)));
+    const { data } = await supabase.from('routine').select('*');
+    if (data) setTasks(data.sort((a: any, b: any) => a.time.localeCompare(b.time)));
     setIsLoading(false);
   };
-
   const importFromWeekly = async () => {
-    const resWeekly = await api.get('/weekly');
-    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const todayName = days[new Date().getDay()];
-    const plan = resWeekly.data.find((p: any) => p.day === todayName);
+    const { data: weekly } = await supabase.from('weekly').select('*');
+    const daysArr = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const todayName = daysArr[new Date().getDay()];
+    const plan = weekly?.find((p: any) => p.day === todayName);
 
     if (plan) {
       const items = [
@@ -34,28 +31,37 @@ export default function Routine() {
       ].filter(i => i.title);
 
       for (const item of items) {
-        await api.post('/routine', { id: uuidv4(), ...item, completed: false });
+        await supabase.from('routine').insert([{ ...item, completed: false }]);
       }
       fetchTasks();
     }
   };
-
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTask.title || !newTask.time) return;
     
-    await api.post('/routine', { id: uuidv4(), ...newTask, completed: false });
-    setNewTask({ title: '', time: '', type: 'estudo' });
+    const { data, error } = await supabase.from('routine').insert([newTask]).select();
+    
+    // Se o lembrete estiver ativado, enviamos para o n8n
+    if (!error && newTask.send_reminder) {
+      fetch('https://provedor.app.n8n.cloud/webhook-test/bismak-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data[0])
+      }).catch(err => console.log("Erro ao enviar para n8n:", err));
+    }
+
+    setNewTask({ title: '', time: '', type: 'estudo', send_reminder: false });
     fetchTasks();
   };
 
   const toggleTask = async (task: any) => {
-    await api.put('/routine', { ...task, completed: !task.completed });
+    await supabase.from('routine').update({ completed: !task.completed }).eq('id', task.id);
     fetchTasks();
   };
 
   const deleteTask = async (id: string) => {
-    await api.delete(`/routine/${id}`);
+    await supabase.from('routine').delete().eq('id', id);
     fetchTasks();
   };
 
@@ -107,6 +113,16 @@ export default function Routine() {
               <option value="trabalho">Trabalho</option>
             </select>
           </div>
+          <div className="w-full md:w-auto flex items-center gap-2 mb-2 md:mb-0 px-2 self-center">
+            <input 
+              type="checkbox" 
+              id="reminder"
+              checked={newTask.send_reminder}
+              onChange={e => setNewTask({...newTask, send_reminder: e.target.checked})}
+              className="w-4 h-4 rounded border-white/10 bg-black/20 text-blue-500 focus:ring-blue-500"
+            />
+            <label htmlFor="reminder" className="text-sm text-gray-400 cursor-pointer">Avisar WhatsApp</label>
+          </div>
           <button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-xl transition duration-200 flex items-center justify-center gap-2">
             <Plus size={20} /> Adicionar
           </button>
@@ -135,6 +151,11 @@ export default function Routine() {
                   `}>
                     {task.type}
                   </span>
+                  {task.send_reminder && (
+                    <span className="flex items-center gap-1 text-[10px] text-blue-400 font-bold uppercase">
+                      <Bell size={10} /> WhatsApp
+                   </span>
+                  )}
                 </div>
               </div>
             </div>

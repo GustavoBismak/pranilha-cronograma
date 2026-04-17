@@ -3,7 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { DollarSign, Fuel, TrendingUp } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
-import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
 export default function Uber() {
   const [history, setHistory] = useState<any[]>([]);
@@ -14,8 +14,8 @@ export default function Uber() {
   }, []);
 
   const fetchData = async () => {
-    const res = await api.get('/uber');
-    setHistory(res.data.history.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+    const { data } = await supabase.from('uber').select('*').order('date', { ascending: true });
+    if (data) setHistory(data);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +25,7 @@ export default function Uber() {
     const fees = parseFloat(form.fees) || 0;
     const profit = earnings - fuel - fees;
 
-    await api.post('/uber', { id: uuidv4(), date: form.date, earnings, fuel, fees, profit });
+    await supabase.from('uber').insert([{ date: form.date, earnings, fuel, fees, profit }]);
     setForm({ ...form, earnings: '', fuel: '', fees: '' });
     fetchData();
   };

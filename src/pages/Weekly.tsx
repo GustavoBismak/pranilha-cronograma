@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CalendarRange, Save } from 'lucide-react';
-import api from '../services/api';
+import { supabase } from '../lib/supabase';
 
 export default function Weekly() {
   const [weeklyPlan, setWeeklyPlan] = useState<any[]>([]);
@@ -11,17 +11,20 @@ export default function Weekly() {
   }, []);
 
   const fetchWeeklyData = async () => {
-    const res = await api.get('/weekly');
-    const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-    const fullPlan = days.map(day => {
-      return res.data.find((p: any) => p.day === day) || { day, morning: '', afternoon: '', night: '' };
+    const { data } = await supabase.from('weekly').select('*');
+    const daysArr = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const fullPlan = daysArr.map(day => {
+      return data?.find((p: any) => p.day === day) || { day, morning: '', afternoon: '', night: '' };
     });
     setWeeklyPlan(fullPlan);
   };
 
   const handleSave = async () => {
     try {
-      await api.put('/weekly', weeklyPlan);
+      // Supabase upsert requires unique constraint or primary key. 
+      // We'll use 'day' as our unique identifier for upsert.
+      const { error } = await supabase.from('weekly').upsert(weeklyPlan, { onConflict: 'day' });
+      if (error) throw error;
       setIsEditing(false);
     } catch (err) {
       console.error("Erro ao salvar plano:", err);
