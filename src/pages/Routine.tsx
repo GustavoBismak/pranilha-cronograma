@@ -7,13 +7,37 @@ export default function Routine() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [newTask, setNewTask] = useState({ title: '', time: '', type: 'estudo' });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     fetchTasks();
   }, []);
 
   const fetchTasks = async () => {
+    setIsLoading(true);
     const res = await api.get('/routine');
     setTasks(res.data.sort((a: any, b: any) => a.time.localeCompare(b.time)));
+    setIsLoading(false);
+  };
+
+  const importFromWeekly = async () => {
+    const resWeekly = await api.get('/weekly');
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const todayName = days[new Date().getDay()];
+    const plan = resWeekly.data.find((p: any) => p.day === todayName);
+
+    if (plan) {
+      const items = [
+        { title: plan.morning, time: '08:00', type: 'trabalho' },
+        { title: plan.afternoon, time: '14:00', type: 'estudo' },
+        { title: plan.night, time: '19:00', type: 'familia' }
+      ].filter(i => i.title);
+
+      for (const item of items) {
+        await api.post('/routine', { id: uuidv4(), ...item, completed: false });
+      }
+      fetchTasks();
+    }
   };
 
   const addTask = async (e: React.FormEvent) => {
@@ -30,10 +54,23 @@ export default function Routine() {
     fetchTasks();
   };
 
+  const deleteTask = async (id: string) => {
+    await api.delete(`/routine/${id}`);
+    fetchTasks();
+  };
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Cronograma Diário</h2>
+        {tasks.length === 0 && !isLoading && (
+          <button 
+            onClick={importFromWeekly}
+            className="text-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-4 py-2 rounded-xl hover:bg-emerald-500/20 transition"
+          >
+            Importar do Plano Semanal
+          </button>
+        )}
       </div>
 
       <div className="glass-panel p-6">
@@ -102,7 +139,10 @@ export default function Routine() {
               </div>
             </div>
             
-            <button className="p-2 text-gray-500 hover:text-red-400 transition hover:bg-red-400/10 rounded-lg">
+            <button 
+              onClick={() => deleteTask(task.id)}
+              className="p-2 text-gray-500 hover:text-red-400 transition hover:bg-red-400/10 rounded-lg"
+            >
               <Trash2 size={18} />
             </button>
           </div>

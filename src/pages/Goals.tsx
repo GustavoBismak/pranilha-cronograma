@@ -25,6 +25,12 @@ export default function Goals() {
     fetchGoals();
   };
 
+  const updateProgress = async (goal: any, amount: number) => {
+    const newProgress = Math.min(100, Math.max(0, goal.progress + amount));
+    await api.put('/goals', { id: goal.id, progress: newProgress });
+    fetchGoals();
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex justify-between items-center">
@@ -97,6 +103,27 @@ export default function Goals() {
                   >
                     <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full"></div>
                   </div>
+                </div>
+                
+                <div className="flex gap-2 mt-4">
+                   <button 
+                    onClick={() => updateProgress(goal, -5)}
+                    className="bg-white/5 hover:bg-white/10 text-gray-400 px-3 py-1 rounded-lg text-xs transition"
+                   >
+                     -5%
+                   </button>
+                   <button 
+                    onClick={() => updateProgress(goal, 5)}
+                    className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-xs border border-blue-500/20 transition"
+                   >
+                     +5%
+                   </button>
+                   <button 
+                    onClick={() => updateProgress(goal, 10)}
+                    className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-lg text-xs border border-emerald-500/20 transition"
+                   >
+                     +10%
+                   </button>
                 </div>
               </div>
             </div>
