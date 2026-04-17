@@ -44,7 +44,8 @@ export default function Routine() {
     
     // Se o lembrete estiver ativado, enviamos para o n8n
     if (!error && newTask.send_reminder) {
-      // Criar uma data completa para o n8n não se perder
+      alert("Enviando lembrete para o n8n...");
+      
       const [hours, minutes] = newTask.time.split(':');
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -52,13 +53,18 @@ export default function Routine() {
       fetch('https://provedor.app.n8n.cloud/webhook-test/bismak-reminder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        mode: 'no-cors', // Tenta desativar restrição de CORS para teste rápido
+        mode: 'no-cors',
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
         })
-      }).then(() => console.log("Enviado para n8n com sucesso!"))
-        .catch(err => console.error("Erro crítico no fetch:", err));
+      }).then(() => {
+        console.log("Enviado para n8n com sucesso!");
+        alert("Enviado com sucesso! Verifique o n8n.");
+      }).catch(err => {
+        console.error("Erro crítico no fetch:", err);
+        alert("Erro ao enviar: " + err.message);
+      });
     }
 
     setNewTask({ title: '', time: '', type: 'estudo', send_reminder: false });
