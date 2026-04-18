@@ -44,29 +44,18 @@ export default function Routine() {
     
     // Se o lembrete estiver ativado, enviamos para o n8n
     if (!error && newTask.send_reminder) {
-      alert("Enviando lembrete para o n8n...");
-      
       const [hours, minutes] = newTask.time.split(':');
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
+      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook/bismak-reminder', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'text/plain', // Mudando para text/plain evita alguns problemas de CORS em túneis
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
         })
-      }).then((res) => {
-        if (!res.ok) throw new Error("Status: " + res.status);
-        console.log("Enviado para n8n com sucesso!");
-        alert("Enviado com sucesso! Verifique o n8n.");
-      }).catch(err => {
-        console.error("Erro no envio:", err);
-        alert("Erro no envio: " + err.message);
-      });
+      }).catch(err => console.error("Erro no envio do lembrete:", err));
     }
 
     setNewTask({ title: '', time: '', type: 'estudo', send_reminder: false });
