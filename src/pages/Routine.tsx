@@ -48,14 +48,15 @@ export default function Routine() {
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          ...data[0],
-          scheduled_at: scheduledDate.toISOString()
-        })
+      const params = new URLSearchParams({
+        id: data[0].id,
+        title: data[0].title,
+        scheduled_at: scheduledDate.toISOString()
+      });
+
+      fetch(`https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder?${params.toString()}`, {
+        method: 'GET',
+        mode: 'no-cors'
       }).catch(err => console.error("Erro no envio do lembrete:", err));
     }
 
