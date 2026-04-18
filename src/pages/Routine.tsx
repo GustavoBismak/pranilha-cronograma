@@ -48,6 +48,7 @@ export default function Routine() {
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
+      alert("Tentando enviar lembrete...");
       fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
         method: 'POST',
         headers: { 
@@ -57,7 +58,11 @@ export default function Routine() {
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
         })
-      }).catch(err => console.error("Erro no envio do lembrete:", err));
+      }).then(() => {
+        alert("Enviado com sucesso para o n8n!");
+      }).catch(err => {
+        alert("Erro no envio: " + err.message);
+      });
     }
 
     setNewTask({ title: '', time: '', type: 'estudo', send_reminder: false });
