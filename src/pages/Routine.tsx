@@ -52,7 +52,9 @@ export default function Routine() {
 
       fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'text/plain', // Mudando para text/plain evita alguns problemas de CORS em túneis
+        },
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
