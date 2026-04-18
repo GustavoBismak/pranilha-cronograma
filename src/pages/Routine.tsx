@@ -50,12 +50,9 @@ export default function Routine() {
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      fetch('https://bismak-n8n.loca.lt/webhook-test/bismak-reminder', {
+      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'bypass-tunnel-reminder': 'true' // Ignora a página de aviso do LocalTunnel
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
