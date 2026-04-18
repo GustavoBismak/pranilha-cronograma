@@ -51,6 +51,7 @@ export default function Routine() {
       alert("Tentando enviar lembrete...");
       fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
         method: 'POST',
+        mode: 'no-cors', // Força o envio "ceguinho", pulando bloqueios do navegador
         headers: { 
           'Content-Type': 'text/plain',
         },
@@ -59,7 +60,7 @@ export default function Routine() {
           scheduled_at: scheduledDate.toISOString()
         })
       }).then(() => {
-        alert("Enviado com sucesso para o n8n!");
+        alert("Enviado com sucesso para o n8n! (Modo No-CORS)");
       }).catch(err => {
         alert("Erro no envio: " + err.message);
       });
