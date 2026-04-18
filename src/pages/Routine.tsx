@@ -48,9 +48,11 @@ export default function Routine() {
       const scheduledDate = new Date();
       scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook/bismak-reminder', {
+      fetch('https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'text/plain',
+        },
         body: JSON.stringify({
           ...data[0],
           scheduled_at: scheduledDate.toISOString()
