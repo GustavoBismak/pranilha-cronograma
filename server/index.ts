@@ -93,6 +93,19 @@ app.post('/api/uber', (req, res) => {
   res.json({ success: true });
 });
 
+app.put('/api/uber', (req, res) => {
+  const { id, date, earnings, fuel, fees, profit } = req.body;
+  const stmt = db.prepare('UPDATE uber SET date=?, earnings=?, fuel=?, fees=?, profit=? WHERE id=?');
+  stmt.run(date, earnings, fuel, fees, profit, id);
+  res.json({ success: true });
+});
+
+app.delete('/api/uber/:id', (req, res) => {
+  const stmt = db.prepare('DELETE FROM uber WHERE id=?');
+  stmt.run(req.params.id);
+  res.json({ success: true });
+});
+
 // GOALS
 app.get('/api/goals', (req, res) => {
   const stmt = db.prepare('SELECT * FROM goals');

@@ -54,7 +54,8 @@ export default function Routine() {
         scheduled_at: scheduledDate.toISOString()
       });
 
-      fetch(`https://focal-trails-costumes-exp.trycloudflare.com/webhook-test/bismak-reminder?${params.toString()}`, {
+      const n8nUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      fetch(`${n8nUrl}?${params.toString()}`, {
         method: 'GET',
         mode: 'no-cors'
       }).catch(err => console.error("Erro no envio do lembrete:", err));

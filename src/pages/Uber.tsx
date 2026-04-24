@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DollarSign, Fuel, TrendingUp } from 'lucide-react';
+import { DollarSign, Fuel, TrendingUp, Pencil, Trash2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 
 export default function Uber() {
   const [history, setHistory] = useState<any[]>([]);
   const [form, setForm] = useState({ date: format(new Date(), 'yyyy-MM-dd'), earnings: '', fuel: '', fees: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -24,9 +25,38 @@ export default function Uber() {
     const fees = parseFloat(form.fees) || 0;
     const profit = earnings - fuel - fees;
 
-    await supabase.from('uber').insert([{ date: form.date, earnings, fuel, fees, profit }]);
-    setForm({ ...form, earnings: '', fuel: '', fees: '' });
+    if (editingId) {
+      await supabase.from('uber').update({ date: form.date, earnings, fuel, fees, profit }).eq('id', editingId);
+      setEditingId(null);
+    } else {
+      await supabase.from('uber').insert([{ date: form.date, earnings, fuel, fees, profit }]);
+    }
+
+    setForm({ date: format(new Date(), 'yyyy-MM-dd'), earnings: '', fuel: '', fees: '' });
     fetchData();
+  };
+
+  const handleEdit = (item: any) => {
+    setEditingId(item.id);
+    setForm({
+      date: item.date,
+      earnings: item.earnings.toString(),
+      fuel: item.fuel.toString(),
+      fees: item.fees.toString()
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este registro?')) {
+      await supabase.from('uber').delete().eq('id', id);
+      fetchData();
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ date: format(new Date(), 'yyyy-MM-dd'), earnings: '', fuel: '', fees: '' });
   };
 
   const totalProfit = history.reduce((acc, curr) => acc + curr.profit, 0);
@@ -39,8 +69,15 @@ export default function Uber() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass-panel p-6 lg:col-span-1">
-          <h3 className="text-lg font-bold mb-4">Novo Registro</h3>
+        <div className="glass-panel p-6 lg:col-span-1 h-fit sticky top-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">{editingId ? 'Editar Registro' : 'Novo Registro'}</h3>
+            {editingId && (
+              <button onClick={cancelEdit} className="text-gray-400 hover:text-white">
+                <X size={20} />
+              </button>
+            )}
+          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">Data</label>
@@ -68,8 +105,8 @@ export default function Uber() {
                   R$ {((parseFloat(form.earnings)||0) - (parseFloat(form.fuel)||0) - (parseFloat(form.fees)||0)).toFixed(2)}
                 </span>
               </div>
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition duration-200">
-                Salvar Registro
+              <button type="submit" className={`w-full ${editingId ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-3 rounded-xl transition duration-200`}>
+                {editingId ? 'Atualizar Registro' : 'Salvar Registro'}
               </button>
             </div>
           </form>
@@ -121,6 +158,48 @@ export default function Uber() {
                 <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
               </AreaChart>
             </ResponsiveContainer>
+          </div>
+
+          <div className="glass-panel p-6">
+            <h3 className="text-lg font-bold mb-4">Histórico de Registros</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-gray-400 text-sm border-b border-white/10">
+                    <th className="pb-3 font-medium">Data</th>
+                    <th className="pb-3 font-medium">Ganhos</th>
+                    <th className="pb-3 font-medium">Custos</th>
+                    <th className="pb-3 font-medium text-emerald-400">Lucro</th>
+                    <th className="pb-3 font-medium text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {[...history].reverse().map((item) => (
+                    <tr key={item.id} className="group hover:bg-white/5 transition-colors">
+                      <td className="py-4 text-sm">{item.date}</td>
+                      <td className="py-4 text-sm font-mono text-gray-300">R$ {item.earnings.toFixed(2)}</td>
+                      <td className="py-4 text-sm font-mono text-gray-500">R$ {(item.fuel + item.fees).toFixed(2)}</td>
+                      <td className="py-4 text-sm font-mono font-bold text-emerald-400">R$ {item.profit.toFixed(2)}</td>
+                      <td className="py-4 text-right">
+                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleEdit(item)} className="p-2 text-gray-400 hover:text-blue-400 transition hover:bg-blue-400/10 rounded-lg">
+                            <Pencil size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(item.id)} className="p-2 text-gray-400 hover:text-red-400 transition hover:bg-red-400/10 rounded-lg">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {history.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-10 text-center text-gray-500">Nenhum registro encontrado.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
